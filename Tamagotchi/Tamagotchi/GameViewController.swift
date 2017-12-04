@@ -11,15 +11,15 @@ import SpriteKit
 import GameplayKit
 
 class GameViewController: UIViewController {
-
+    
     var gameManager = GameManager()
-
+    
     @IBOutlet weak var hoursTitle: UILabel!
     @IBOutlet weak var ageLabel: UILabel!
     @IBOutlet weak var hoursLabel: UILabel!
     @IBOutlet weak var tempLabel: UILabel!
     @IBOutlet weak var thermometer: UIImageView!
-
+    
     @IBOutlet weak var foodLabel: UILabel!
     @IBOutlet weak var IceCreamOne: UIImageView!
     @IBOutlet weak var IceCreamTwo: UIImageView!
@@ -33,9 +33,9 @@ class GameViewController: UIViewController {
     @IBOutlet weak var happinessTitle: UILabel!
     
     let constantTimeInterval = 12.0
-
+    
     @IBOutlet weak var resetVisual: UIButton!
-
+    
     var age = 0
     var hour = 0
     var hungryDays = 0
@@ -46,27 +46,31 @@ class GameViewController: UIViewController {
     var hourTracker = Timer()
     var x = Timer()
     var scene = GameplayScene(fileNamed: "GameplayScene")
-
-
+    
+    func creatureInteractionButtonsHidden(bool: Bool){
+        self.poopVisual.isHidden = bool
+        self.feedVisual.isHidden = bool
+        self.thoughtBubble.isHidden = bool
+        self.thoughtBubbleText.isHidden = bool
+        self.resetVisual.isHidden = bool;
+    }
+    
+    
     @IBAction func resetGame(_ sender: Any) {
         super.viewDidLoad()
-        self.poopVisual.isHidden = true
+        
         age = 0
         hungryDays = 0
         happyDays = 0
         
         ageLabel.text = String(age)
-        self.feedVisual.isHidden = true
-        self.touchHatVisual.isHidden = false
-        self.thoughtBubble.isHidden = true
-        self.thoughtBubbleText.baselineAdjustment = .alignCenters
-        self.thoughtBubbleText.isHidden = true
-        self.thermometer.isHidden = false
-        self.happinessTitle.isHidden = true
-        self.happiness.isHidden = true
-         self.resetVisual.isHidden = true;
+        creatureInteractionButtonsHidden(bool: true)
+        self.happinessTitle.isHidden = true;
+        self.happiness.isHidden = true;
+        self.thermometer.isHidden = false;
+        self.touchHatVisual.isHidden = false;
         self.tempLabel.isHidden = false;
-        self.thoughtBubbleText.textAlignment = .center;
+        
         foodUIHide(bool: true)
         updateTempLabel()
         ageTracker = Timer()
@@ -85,9 +89,10 @@ class GameViewController: UIViewController {
             view.showsFPS = true
             view.showsNodeCount = true
         }
-        
+        //        self.thoughtBubbleText.baselineAdjustment = .alignCenters;
+        //        self.thoughtBubbleText.textAlignment = .center;
     }
-
+    
     @IBAction func touchHatButton(_ sender: Any) {
         gameManager.egg.wearingHat = true
         updateTempLabel()
@@ -95,7 +100,7 @@ class GameViewController: UIViewController {
         self.touchHatVisual.isHidden = true
     }
     @IBAction func wake(_ sender: UIButton) {
-
+        
         if ageActivated == true{
             return print("Age already active")
         }
@@ -103,37 +108,45 @@ class GameViewController: UIViewController {
         ageActivated = true
         hourTracker = Timer.scheduledTimer(timeInterval: constantTimeInterval/24/12, target: self, selector: (#selector(updateHour)), userInfo: nil, repeats: true)
     }
-
-
+    
     @IBAction func sleep(_ sender: UIButton) {
         ageTracker.invalidate()
         ageActivated = false
     }
-
+    
     @IBAction func poo(_ sender: Any) {
         gameManager.lion.pooNow(innerFunction: {
-            self.removeFoodFromArray()
+            self.updateFoodMenuBar()
         })
         fillIceCreamArray()
         scene?.pooQuery()
         self.poopVisual.isHidden = true
-
     }
-    
     
     @IBAction func dayButton(_ sender: Any) {
         scene?.makeNightBackground()
     }
     
-    
-    
-    
     @IBAction func play(_ sender: Any) {
-        
         if gameManager.lion.alive == false || gameManager.lion.born == false {
             return print("Dead kitty!")
         }
         
+        spinAnimation()
+        self.stomachContentsStatus(statement: "WHHEEEE!!!", bool: false)
+        increaseHappiness()
+    }
+    
+    func increaseHappiness(){
+        if gameManager.lion.happy <= 30 {
+            gameManager.lion.happy += 1
+            print (gameManager.lion.happy)
+            happiness.text = String("\(countHappiness())")
+            playDays = 0
+        }
+    }
+    
+    func spinAnimation(){
         scene?.catSprite.flipCat(innerFunction:{
             if self.hungryDays > 4 {
                 self.scene?.catSprite.animateSickCat()
@@ -141,122 +154,125 @@ class GameViewController: UIViewController {
                 self.scene?.catSprite.startIdleAnimation()
             }
         })
+        
         print("I should be flipping!")
-        self.stomachContentsStatus(statement: "WHHEEEE!!!", bool: false)
-        
-
-        
-        if gameManager.lion.happy <= 30 {
-            gameManager.lion.happy += 1
-            print (gameManager.lion.happy)
-            happiness.text = String("\(countHappiness())")
-        }
-        
-        playDays = 0
     }
-
+    
     
     @IBAction func updatemeal(_ sender: Any) {
-        if countStomachContents() >= 3 {
-            self.poopVisual.isHidden = false
-            return print("I'm full!")
-        }
-        if gameManager.lion.alive == false{
-            return print("I'm dead kitty")
-        }
         gameManager.lion.eat(meal: "kiwi")
-        
         stomachContentsStatus(statement: "Thank you for feeding me! >^_^<", bool: false)
-
-        if countStomachContents() == 1 {
-            fillIceCreamArray(firstIceCream: "icecreamone.png")
-        } else if countStomachContents() == 2 {
-            fillIceCreamArray(firstIceCream: "icecreamone.png", secondIceCream: "icecreamtwo.png")
-        } else {
-            fillIceCreamArray(firstIceCream: "icecreamone.png", secondIceCream: "icecreamtwo.png", thirdIceCream: "icecreamthree.png")
-        }
-
+        
+        updateFoodMenuBar()
+        cureHunger()
+        
+        //        if countStomachContents() >= 3 {
+        //            self.poopVisual.isHidden = false
+        //            return print("I'm full!")
+        //        }
+        //        if gameManager.lion.alive == false{
+        //            return print("I'm dead kitty")
+        //        }
+    }
+    
+    func cureHunger(){
         if hungryDays > 4 && countStomachContents() >= 1{
             hungryDays = 0
             scene?.catSprite.stopSickCatAnimation()
         }
-
     }
-
-    @objc func updateAge() { /* THIS NEEDS TO BE REFACTORED */
+    
+    
+    
+    @objc func updateAge() {
         
         age += 1 //increments age every day
         ageLabel.text = String(age) //changes age text
         
-        
         if gameManager.lion.born == true { //checks if lion is born
-            playDays += 1 //increments number of days since played with
-            if playDays > 4 { //checks if there is now more than two
-                gameManager.lion.happy -= 1 //subtracts a happiness point for it
-                happiness.text = String("\(countHappiness())") //prints happiness
-            }
-            
-            if countStomachContents() < 2 { //checks stomach contents
-                if countStomachContents() == 0 { // checks if nothing in there
-                    hungryDays += 1 // incremements hungry days
-                }
-                
-                if hungryDays > 4 { // checks if 4 such days have passed
-                    scene?.catSprite.animateSickCat() //animates a sick cat
-                }
-                
-                if hungryDays > 10 { //checks if more than 10 such days
-                    scene?.catSprite.animateDeadCat() //kills cat animation
-                    ageTracker.invalidate() //stops time and all time related stuff
-                    hourTracker.invalidate()
-                    ageActivated = false //ends timerboolean
-                    gameManager.lion.alive = false //sets up flag to prevent anything that can happen if alive
-                    self.resetVisual.isHidden = false;
-                }
-            }
-            
-        if countStomachContents() == 0 {
-                self.stomachContentsStatus(statement: "pweez feed me :'(", bool: false) //prints out what it needs
-        } else if gameManager.lion.happy < 0 {
-            self.stomachContentsStatus(statement: "I'm so sad :'(", bool: false)
-        } else if playDays > 4 {
-            self.stomachContentsStatus(statement: "I'm boooooored", bool: false)
-        } else if scene!.pooCounter > 0 {
-            self.stomachContentsStatus(statement: "It's starting to smell! :^(", bool: false)
-        } else {
-            self.stomachContentsStatus(statement: "", bool: true)
-            }
-        }
-    
-       
-        if scene!.pooCounter > 0 { //if it does then start counting poo
-            gameManager.lion.happy -= 1 //subtract a happiness point for it
-            happiness.text = String("\(countHappiness())") //print the result
+            playVersusHappyManager()
+            hungerManager()
+            chooseHungerStatement()
         }
         
+        doAPooADay()
+        tooMuchPoo()
+        
+        makeAHappyDay()
+        angelAppearanceManager()
+        
+        scene?.increasePooAge()
+        
+    }
+    
+    func angelAppearanceManager(){
+        if happyDays > 5 {
+            scene?.angel.isHidden = false
+        } else {
+            scene?.angel.isHidden = true
+        }
+    }
+    
+    func makeAHappyDay(){
+        if countHappiness() >= 10 {
+            happyDays += 1 //increments number of days since played with
+        } else {
+            happyDays = 0 // happyDaysAreAStreak -- no losing a single day; if you msis one day, it's back to square ones
+        }
+    }
+    
+    func doAPooADay(){
         if countStomachContents() > 0 { //checks stomach contents
             gameManager.lion.pooNow(innerFunction: {
-                self.removeFoodFromArray()
+                self.updateFoodMenuBar()
                 self.scene?.pooQuery()
                 self.poopVisual.isHidden = true
             })
         }
-        
-        print(scene?.pooCounter)
-    
-        if countHappiness() >= 10 {
-            happyDays += 1 //increments number of days since played with
-        }
-        if happyDays > 5 {
-           scene?.angel.isHidden = false
-        }
-        if countHappiness() < 10 {
-            scene?.angel.isHidden = true
-        }
-        
-
     }
-  
+    
+    func tooMuchPoo(){
+        if scene!.pooCounter > 0 { //if it does then start counting poo
+            gameManager.lion.happy -= 1 //subtract a happiness point for it
+            happiness.text = String("\(countHappiness())") //print the result
+        }
+    }
+    
+    func playVersusHappyManager(){
+        playDays += 1 //increments number of days since played with
+        
+        if playDays > 4 { //checks if there is now more than two
+            gameManager.lion.happy -= 1 //subtracts a happiness point for it
+            happiness.text = String("\(countHappiness())") //prints happiness
+        }
+    }
+    
+    func hungerManager(){
+        if countStomachContents() < 2 { //checks stomach contents
+            if countStomachContents() == 0 { // checks if nothing in there
+                hungryDays += 1 // incremements hungry days
+            }
+            
+            if hungryDays > 4 { // checks if 4 such days have passed
+                scene?.catSprite.animateSickCat() //animates a sick cat
+            }
+            
+            if hungryDays > 10 { //checks if more than 10 such days
+                killCat()
+            }
+        }
+    }
+    
+    func killCat(){
+        scene?.catSprite.animateDeadCat() //kills cat animation
+        ageTracker.invalidate() //stops time and all time related stuff
+        hourTracker.invalidate()
+        ageActivated = false //ends timerboolean
+        gameManager.lion.alive = false //sets up flag to prevent anything that can happen if alive
+        self.resetVisual.isHidden = false;
+    }
+    
+    
     @objc func updateHour() {
         updateTempLabel() //updates temperature if changed
         hour += 1 //increments age every hour
@@ -283,28 +299,39 @@ class GameViewController: UIViewController {
             }
         }
     }
-
-
+    
+    
     func stomachContentsStatus(statement: String, bool: Bool){
         self.thoughtBubbleText.text = statement
         self.thoughtBubble.isHidden = bool
         self.thoughtBubbleText.isHidden = bool
     }
-
+    
+    func chooseHungerStatement(){
+        if countStomachContents() == 0 {
+            self.stomachContentsStatus(statement: "pweez feed me :'(", bool: false) //prints out what it needs
+        } else if gameManager.lion.happy < 0 {
+            self.stomachContentsStatus(statement: "I'm so sad :'(", bool: false)
+        } else if playDays > 4 {
+            self.stomachContentsStatus(statement: "I'm boooooored", bool: false)
+        } else if scene!.pooCounter > 0 {
+            self.stomachContentsStatus(statement: "It's starting to smell! :^(", bool: false)
+        } else {
+            self.stomachContentsStatus(statement: "", bool: true)
+        }
+    }
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-//        self.hoursLabel.isHidden = true
-//        self.hoursTitle.isHidden = true
-        self.poopVisual.isHidden = true
-        self.feedVisual.isHidden = true
-        self.thoughtBubble.isHidden = true
-        self.thoughtBubbleText.isHidden = true
+        //        self.hoursLabel.isHidden = true
+        //        self.hoursTitle.isHidden = true
+        creatureInteractionButtonsHidden(bool: true)
         self.thoughtBubbleText.textAlignment = .center;
         self.thoughtBubbleText.numberOfLines = 0
-        self.resetVisual.isHidden = true;
         foodUIHide(bool: true)
         updateTempLabel()
-      
+        
         ageTracker = Timer.scheduledTimer(timeInterval: constantTimeInterval, target: self, selector: (#selector(updateAge)), userInfo: nil, repeats: true)
         hourTracker = Timer.scheduledTimer(timeInterval: constantTimeInterval/24, target: self, selector: (#selector(updateHour)), userInfo: nil, repeats: true)
         hideAngel()
@@ -318,11 +345,12 @@ class GameViewController: UIViewController {
             view.showsNodeCount = true
         }
     }
-
+    
+    
     override var shouldAutorotate: Bool {
         return false
     }
-
+    
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         if UIDevice.current.userInterfaceIdiom == .phone {
             return .allButUpsideDown
@@ -330,16 +358,16 @@ class GameViewController: UIViewController {
             return .all
         }
     }
-
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Release any cached data, images, etc that aren't in use.
     }
-
+    
     override var prefersStatusBarHidden: Bool {
         return true
     }
-
+    
     func hideEggUI(){
         self.tempLabel.isHidden = true
         self.thermometer.isHidden = true
@@ -362,9 +390,12 @@ class GameViewController: UIViewController {
     }
     
     
-    func removeFoodFromArray(){
+    func updateFoodMenuBar(){
+        if countStomachContents() == 3{
+            return fillIceCreamArray(firstIceCream: "icecreamone.png", secondIceCream: "icecreamtwo.png", thirdIceCream: "icecreamthree.png")
+        }
         if countStomachContents() == 2{
-           return fillIceCreamArray(firstIceCream: "icecreamone.png", secondIceCream: "icecreamtwo.png")
+            return fillIceCreamArray(firstIceCream: "icecreamone.png", secondIceCream: "icecreamtwo.png")
         }
         if countStomachContents() == 1 {
             return fillIceCreamArray(firstIceCream: "icecreamone.png")
@@ -379,7 +410,7 @@ class GameViewController: UIViewController {
     }
     
     func countStomachContents() -> Int {
-       return gameManager.lion.stomachContents.count
+        return gameManager.lion.stomachContents.count
     }
     
     func countHappiness() -> Int {
@@ -387,3 +418,4 @@ class GameViewController: UIViewController {
     }
     
 }
+

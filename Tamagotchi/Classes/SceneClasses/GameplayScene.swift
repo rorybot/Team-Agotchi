@@ -27,11 +27,11 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
     var angel =  Angel()
     
     
-
+    
     func initialize() {
         
     }
-
+    
     override func didMove(to view: SKView) {
         physicsWorld.contactDelegate = self
         addChild(daybackground)
@@ -50,7 +50,7 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
         addChild(angel)
         angel.initialize()
     }
-
+    
     
     func makeNightBackground(){
         let fadeOut = SKAction.fadeOut(withDuration: 3)
@@ -68,7 +68,7 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
     
     
     
- 
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if viewController.gameManager.lion.alive == true{
             for touch in touches {
@@ -120,7 +120,7 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
         catSprite.stopCatAnimation()
     }
     
- 
+    
     func crackEgg(){
         run(crackSound)
         if egg.cracked == true {
@@ -143,12 +143,22 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
         pooArray.append(pooSprite)
         addChild(pooSprite)
         pooCounter += 1
-        pooSprite.initialize(name:"MrPoopy", position: CGPoint(x:catSprite.position.x, y: catSprite.position.y-200))
+        pooSprite.initialize(name:"MrPoopy", position: CGPoint(x:catSprite.position.x, y: catSprite.position.y-200), pooCounter: Float(pooCounter))
+        print(pooSprite.zPosition)
         run(crackSound)
     }
     
-//    func resetEverything(){
-//        gameManager.egg = Egg()
-//    }
-
+    func increasePooAge(){
+        for poops in pooArray {
+            if poops.alreadyFlower == true {
+                poops.age += 1
+            }
+            
+            if poops.age > 5 {
+                poops.flowerDie()
+            }
+        }
+    }
+    
 }
+

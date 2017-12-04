@@ -12,14 +12,15 @@ import SpriteKit
 class VisualPoo: SKSpriteNode {
     
     var alreadyFlower = false
+    var age = 0
     
-
-    func initialize(name: String, position: CGPoint ){
+    
+    func initialize(name: String, position: CGPoint, pooCounter: Float){
         self.name = name
         self.size = CGSize(width:100.0, height: 100.0)
         self.anchorPoint = CGPoint(x: 0.5, y: 0.5)
         self.position = position
-        self.zPosition = 4;
+        self.zPosition = CGFloat(4 + pooCounter);
         self.texture = SKTexture(imageNamed: "poop.png")
         
         self.physicsBody = SKPhysicsBody(texture: self.texture!, size: self.size);
@@ -49,6 +50,14 @@ class VisualPoo: SKSpriteNode {
             self.run(fadeIn)
             self.run(higher)
         }
+    }
+    
+    func flowerDie(){
+        let fadeOut = SKAction.fadeOut(withDuration: 3)
+        let lower = SKAction.scale(by: CGFloat(0.1), duration: 3)
+        alreadyFlower = true
+        self.run(fadeOut)
+        self.run(lower)
     }
     
 }
