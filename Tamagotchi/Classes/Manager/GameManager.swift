@@ -16,4 +16,11 @@ class GameManager {
     func newEgg(){
         egg = Egg(size: 0, age: 0, temp: 10, cracked: false)
     }
+    
+    var hungryDays = 0
+    
+    var age = 0
+    var hour = 0
+    var playDays = 0
+    var happyDays = 0
 }

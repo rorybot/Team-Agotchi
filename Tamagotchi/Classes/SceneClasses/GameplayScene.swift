@@ -22,6 +22,7 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
     var pooArray: [VisualPoo] = []
     var pooCounter = 0;
     var viewController: GameViewController!
+    var gameManager: GameManager!
     lazy var egg = self.viewController.gameManager.egg
     let crackSound = SKAction.playSoundFileNamed("Fly.mp3", waitForCompletion: false)
     var angel =  Angel()
@@ -128,10 +129,9 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
         }
         eggSprite.crack(innerFunction: { self.addChild(self.catSprite)
             self.catSprite.initializeCatandAnimations();
-            self.viewController.foodUIHide(bool: false)
-            self.viewController.hideEggUI()
-            self.viewController.feedVisual.isHidden = false
-            self.viewController.touchHatVisual.isHidden = true
+            self.catSprite.startIdleAnimation()
+            self.viewController.creatureInteractionButtonsHidden(bool: false)
+            self.viewController.hideEggUI(bool: true)
             self.viewController.gameManager.lion = Lion(size: 10, age: 6, temp: 15, hungry: true, bursting: false, born: true)
             self.eggSprite.removeFromParent()
         })
@@ -159,6 +159,28 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
             }
         }
     }
+    
+    func postAnimationIntercept(){
+            if gameManager!.hungryDays > 4 {
+        catSprite.animateSickCat()
+        } else {
+        catSprite.startIdleAnimation()
+        }
+    }
+    
+    
+    func dayNightManager(hour: Int){
+        if hour == 24 {
+            gameManager.hour = 0
+        } else if hour == 20 {
+            makeNightBackground()
+            print("This Works Too")
+        } else if hour == 6 {
+            print("This Works 3")
+            makeDayBackground()
+        }
+    }
+
     
 }
 
