@@ -135,40 +135,13 @@ class GameViewController: UIViewController {
         view.showsNodeCount = true
     }
     
-    
     @IBAction func touchHatButton(_ sender: Any) {
         gameManager.egg.wearingHat = true
         updateTempLabel()
         scene?.eggSprite.hatEgg()
         self.touchHatVisual.isHidden = true
     }
-    @IBAction func wake(_ sender: UIButton) {
-        
-        if ageActivated == true{
-            return print("Age already active")
-        }
-        ageTracker = Timer.scheduledTimer(timeInterval: constantTimeInterval/12, target: self, selector: (#selector(updateAge)), userInfo: nil, repeats: true)    //runs updateAge function once every 1 seconds. So one minute in time equals 1 day in age
-        ageActivated = true
-        hourTracker = Timer.scheduledTimer(timeInterval: constantTimeInterval/24/12, target: self, selector: (#selector(updateHour)), userInfo: nil, repeats: true)
-    }
-    
-    @IBAction func sleep(_ sender: UIButton) {
-        ageTracker.invalidate()
-        ageActivated = false
-    }
-    
-    @IBAction func poo(_ sender: Any) {
-        gameManager.lion.pooNow(innerFunction: {
-            self.updateFoodMenuBar()
-        })
-        fillIceCreamArray()
-        scene?.pooQuery()
-    }
-    
-//    @IBAction func dayButton(_ sender: Any) {
-//        scene?.makeNightBackground()
-//    }
-    
+
     @IBAction func play(_ sender: Any) {
         if gameManager.lion.alive == false || gameManager.lion.born == false {
             return print("Dead kitty!")
@@ -181,9 +154,7 @@ class GameViewController: UIViewController {
     
     func increaseHappiness(){
         if gameManager.lion.happy <= 30 {
-            gameManager.lion.happy += 1
-            print (gameManager.lion.happy)
-            happiness.text = String("\(countHappiness())")
+            editHappy(amount: 1)
             gameManager.playDays = 0
         }
     }
@@ -192,15 +163,12 @@ class GameViewController: UIViewController {
         scene?.catSprite.flipCat(innerFunction:{
             self.scene?.postAnimationIntercept()
         })
-        
-        print("I should be flipping!")
     }
     
     
     @IBAction func updatemeal(_ sender: Any) {
         gameManager.lion.eat(meal: "kiwi")
         stomachContentsStatus(statement: "Thank you for feeding me! >^_^<", bool: false)
-        
         updateFoodMenuBar()
         cureHunger()
     }
@@ -262,19 +230,22 @@ class GameViewController: UIViewController {
     }
     
     func tooMuchPoo(){
-        if scene!.pooCounter > 0 { //if it does then start counting poo
-            gameManager.lion.happy -= 1 //subtract a happiness point for it
-            happiness.text = String("\(countHappiness())") //print the result
+        if scene!.pooCounter > 0 {
+            editHappy()
         }
     }
     
     func playVersusHappyManager(){
-        gameManager.playDays += 1 //increments number of days since played with
+        gameManager.playDays += 1
         
-        if gameManager.playDays > 4 { //checks if there is now more than two
-            gameManager.lion.happy -= 1 //subtracts a happiness point for it
-            happiness.text = String("\(countHappiness())") //prints happiness
+        if gameManager.playDays > 4 {
+            editHappy()
         }
+    }
+    
+    func editHappy(amount: Int = -1){
+        gameManager.lion.happy += amount
+        happiness.text = String("\(countHappiness())")
     }
     
     func hungerManager(){
@@ -289,21 +260,19 @@ class GameViewController: UIViewController {
         if gameManager.hungryDays > 4 { // checks if 4 such days have passed
             scene?.catSprite.animateSickCat() //animates a sick cat
         }
-        
         if gameManager.hungryDays > 10 { //checks if more than 10 such days
             killCat()
         }
     }
     
     func killCat(){
-        scene?.catSprite.animateDeadCat() //kills cat animation
-        ageTracker.invalidate() //stops time and all time related stuff
+        scene?.catSprite.animateDeadCat()
+        ageTracker.invalidate()
         hourTracker.invalidate()
-        ageActivated = false //ends timerboolean
-        gameManager.lion.alive = false //sets up flag to prevent anything that can happen if alive
-        self.resetVisual.isHidden = false;
+        ageActivated = false
+        gameManager.lion.alive = false
+        self.resetVisual.isHidden = false
     }
-    
     
     @objc func updateHour() {
         updateTempLabel() //updates temperature if changed
@@ -316,27 +285,13 @@ class GameViewController: UIViewController {
         if gameManager.egg.wearingHat == true && gameManager.lion.born == false { //checks if we're in egg-land, and wearing a hat
             gameManager.egg.temp += 1 // increements temperature if so
             if gameManager.egg.temp >= 18 { //hatches egg if that time
-                gameManager.egg.wearingHat = false
                 scene?.crackEgg() // cracks the egg animation
                 happiness.text = String("\(countHappiness())") //prints happiness to screen
-                self.happinessTitle.isHidden = false
-                self.happiness.isHidden = false
+                self.creatureInteractionButtonsHidden(bool: false)
+                self.hideEggUI(bool: true)
             }
         }
     }
-    
-//    func dayNightManager(hour: Int){
-//        if hour == 24 {
-//            gameManager.hour = 0
-//        } else if gameManager.hour == 20 {
-//            scene?.makeNightBackground()
-//            print("This Works Too")
-//        } else if gameManager.hour == 6 {
-//            print("This Works 3")
-//            scene?.makeDayBackground()
-//        }
-//    }
-    
     
     func stomachContentsStatus(statement: String, bool: Bool){
         self.thoughtBubbleText.text = statement
@@ -361,12 +316,9 @@ class GameViewController: UIViewController {
     func countStomachContents() -> Int {
         return gameManager.lion.stomachContents.count
     }
-
     
     func hideAngel() {
         scene?.angel.isHidden = true
-    }
-    func foodUIHide(bool: Bool){
     }
     
     func fillIceCreamArray(firstIceCream: String? = "icecreamfour.png", secondIceCream: String? = "icecreamfour.png", thirdIceCream: String? = "icecreamfour.png"){
@@ -375,7 +327,6 @@ class GameViewController: UIViewController {
         IceCreamThree.image = UIImage(named: thirdIceCream!)
     }
     
-    
     func updateFoodMenuBar(){
         if countStomachContents() == 3{
             return fillIceCreamArray(firstIceCream: "icecreamone.png", secondIceCream: "icecreamtwo.png", thirdIceCream: "icecreamthree.png")
@@ -383,22 +334,19 @@ class GameViewController: UIViewController {
         if countStomachContents() == 2{
             return fillIceCreamArray(firstIceCream: "icecreamone.png", secondIceCream: "icecreamtwo.png")
         }
-        if countStomachContents() == 1 {
+        if countStomachContents() == 1{
             return fillIceCreamArray(firstIceCream: "icecreamone.png")
         } else {
             fillIceCreamArray()
         }
     }
     
-    
     func updateTempLabel(){
         tempLabel.text = "\(gameManager.egg.temp)°C"
     }
 
-    
     func countHappiness() -> Int {
         return gameManager.lion.happy
     }
-    
 }
 

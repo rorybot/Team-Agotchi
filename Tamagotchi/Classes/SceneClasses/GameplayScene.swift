@@ -14,24 +14,20 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
     var canMove = false;
     var moveLeft = false;
     var center = CGFloat();
+    let lionSprite = VisualLion();
     let eggSprite = VisualEgg();
-    var lionSprite = VisualLion();
+    let catSprite = Cat()
+    let angel =  Angel()
     var daybackground = Background()
     var nightbackground = Background()
-    let catSprite = Cat()
     var pooArray: [VisualPoo] = []
     var pooCounter = 0;
     var viewController: GameViewController!
     var gameManager: GameManager!
-    lazy var egg = self.viewController.gameManager.egg
+    lazy var egg = gameManager.egg
     let crackSound = SKAction.playSoundFileNamed("Fly.mp3", waitForCompletion: false)
-    var angel =  Angel()
+
     
-    
-    
-    func initialize() {
-        
-    }
     
     override func didMove(to view: SKView) {
         physicsWorld.contactDelegate = self
@@ -52,7 +48,6 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
         angel.initialize()
     }
     
-    
     func makeNightBackground(){
         let fadeOut = SKAction.fadeOut(withDuration: 3)
         let fadeIn = SKAction.fadeIn(withDuration: 3)
@@ -66,9 +61,6 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
         nightbackground.run(fadeOut)
         daybackground.run(fadeIn)
     }
-    
-    
-    
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if viewController.gameManager.lion.alive == true{
@@ -130,9 +122,8 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
         eggSprite.crack(innerFunction: { self.addChild(self.catSprite)
             self.catSprite.initializeCatandAnimations();
             self.catSprite.startIdleAnimation()
-            self.viewController.creatureInteractionButtonsHidden(bool: false)
-            self.viewController.hideEggUI(bool: true)
-            self.viewController.gameManager.lion = Lion(size: 10, age: 6, temp: 15, hungry: true, bursting: false, born: true)
+            self.gameManager.egg.wearingHat = false
+            self.gameManager.lion = Lion(size: 10, age: 6, temp: 15, hungry: true, bursting: false, born: true)
             self.eggSprite.removeFromParent()
         })
         egg.cracked = true
@@ -168,16 +159,17 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    
     func dayNightManager(hour: Int){
         if hour == 24 {
-            gameManager.hour = 0
-        } else if hour == 20 {
-            makeNightBackground()
-            print("This Works Too")
-        } else if hour == 6 {
-            print("This Works 3")
-            makeDayBackground()
+            return gameManager.hour = 0
+        }
+        
+        if hour == 20 {
+            return makeNightBackground()
+        }
+        
+        if hour == 6 {
+            return makeDayBackground()
         }
     }
 

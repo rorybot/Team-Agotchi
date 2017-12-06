@@ -18,6 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         if let gameViewController = window?.rootViewController as? GameViewController {
             gameViewController.gameManager = GameManager()
+            gameViewController.scene?.gameManager = gameViewController.gameManager
         }
         return true
     }
