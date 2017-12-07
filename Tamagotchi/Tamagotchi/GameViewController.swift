@@ -37,6 +37,7 @@ class GameViewController: UIViewController {
     let constantTimeInterval = 12.0
     var gameManager: GameManager!
     var scene = GameplayScene(fileNamed: "GameplayScene")
+    var hourlyFunctions: [()] = []
     
     override var shouldAutorotate: Bool {
         return false
@@ -202,9 +203,9 @@ class GameViewController: UIViewController {
     func incubateUnlessBorn(){
         print(gameManager.lion.born)
         guard gameManager.lion.born == true else {
-            print("egg.incubate is called")
             gameManager.egg.incubate(innerFunction: {
                 self.crackThatEgg()
+                self.hourlyFunctions.removeLast()
                 })
             return updateTempLabel()
         }
@@ -213,12 +214,9 @@ class GameViewController: UIViewController {
     @objc func updateHour() {
         updateTempLabel() //updates temperature if changed
         gameManager.hour += 1 //increments age every hour
-        print("Hour incremented")
         hoursLabel.text = String(gameManager.hour)  //changes age text
         
-        scene?.dayNightManager(hour: gameManager.hour)
-    
-        incubateUnlessBorn()
+        hourlyFunctions = [(scene?.dayNightManager(hour: gameManager.hour))!, incubateUnlessBorn()]
     }
     
     func dailyTasks(){

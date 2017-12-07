@@ -29,14 +29,10 @@ class Egg {
     }
     
     func incubate(innerFunction:@escaping()->Void){
-               print("guard for cracked is NOT passed")
-        print("egg is \(cracked)")
         if cracked == false && wearingHat == true {
-            print("guard for cracked is passed")
             if temp < 18 {
                 return temp += 1
             } else {
-                print("I am cracking the gg!")
                 cracked = true
                 wearingHat = false
                 return innerFunction()
