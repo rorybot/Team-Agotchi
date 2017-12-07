@@ -116,18 +116,13 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
     
     func crackEgg(innerFunction:(()->Void)? = nil){
         run(crackSound)
-        if egg.cracked == true {
-            return print("Egg already cracked")
-        }
         eggSprite.crack(innerFunction: { self.addChild(self.catSprite)
             self.catSprite.initializeCatandAnimations();
             self.catSprite.startIdleAnimation()
-            self.gameManager.egg.wearingHat = false
             self.gameManager.lion = Lion(size: 10, age: 6, temp: 15, hungry: true, bursting: false, born: true)
             self.eggSprite.removeFromParent()
             innerFunction!()
         })
-        egg.cracked = true
     }
     
     func pooQuery() {

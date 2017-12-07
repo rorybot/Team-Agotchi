@@ -21,6 +21,6 @@ class GameManager {
     
     var age = 0
     var hour = 0
-    var playDays = 0
+    var boredomDays = 0
     var happyDays = 0
 }

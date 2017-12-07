@@ -83,7 +83,7 @@ class GameViewController: UIViewController {
     
     func creatureInteractionButtonsHidden(bool: Bool){
         self.feedVisual.isHidden = bool
-        stomachContentsStatus(statement: "", bool: true)
+        self.stomachContentsStatus(hidden: true)
         self.happinessTitle.isHidden = bool;
         self.happiness.isHidden = bool;
         self.playButton.isHidden = bool;
@@ -120,8 +120,6 @@ class GameViewController: UIViewController {
         if let view = self.view as! SKView? {
             basicSKViewSetup(view: view)
         }
-        //        self.thoughtBubbleText.baselineAdjustment = .alignCenters;
-        //        self.thoughtBubbleText.textAlignment = .center;
     }
     
     func basicSKViewSetup(view: SKView){
@@ -137,7 +135,6 @@ class GameViewController: UIViewController {
     
     @IBAction func touchHatButton(_ sender: Any) {
         gameManager.egg.wearingHat = true
-        updateTempLabel()
         scene?.eggSprite.hatEgg()
         self.touchHatVisual.isHidden = true
     }
@@ -148,14 +145,14 @@ class GameViewController: UIViewController {
         }
         
         spinAnimation()
-        self.stomachContentsStatus(statement: "WHHEEEE!!!", bool: false)
+        self.stomachContentsStatus(statement: "WHHEEEE!!!")
         increaseHappiness()
     }
     
     func increaseHappiness(){
         if gameManager.lion.happy <= 30 {
             editHappy(amount: 1)
-            gameManager.playDays = 0
+            gameManager.boredomDays = 0
         }
     }
     
@@ -169,7 +166,7 @@ class GameViewController: UIViewController {
     @IBAction func updatemeal(_ sender: Any) {
         guard countStomachContents() == 3 else {
         gameManager.lion.eat(meal: "kiwi")
-        stomachContentsStatus(statement: "Thank you for feeding me! >^_^<", bool: false)
+        stomachContentsStatus(statement: "Thank you for feeding me! >^_^<")
         fillIceCreamMenu()
         cureHunger()
             return print(countStomachContents())
@@ -186,23 +183,53 @@ class GameViewController: UIViewController {
     
     
     @objc func updateAge() {
-        gameManager.age += 1 //increments age every day
-        ageLabel.text = String(gameManager.age) //changes age text
+        gameManager.age += 1
+        ageLabel.text = String(gameManager.age)
         
-        if gameManager.lion.born == true { //checks if lion is born
-            playVersusHappyManager()
-            hungerManager()
-            chooseHungerStatement()
+        if gameManager.lion.born == true {
+            dailyTasks()
         }
         
+    }
+    
+    func crackThatEgg() {
+        scene?.crackEgg(innerFunction: {
+                self.creatureInteractionButtonsHidden(bool: false)
+                self.hideEggUI(bool: true)
+            })
+    }
+    
+    func incubateUnlessBorn(){
+        print(gameManager.lion.born)
+        guard gameManager.lion.born == true else {
+            print("egg.incubate is called")
+            gameManager.egg.incubate(innerFunction: {
+                self.crackThatEgg()
+                })
+            return updateTempLabel()
+        }
+    }
+    
+    @objc func updateHour() {
+        updateTempLabel() //updates temperature if changed
+        gameManager.hour += 1 //increments age every hour
+        print("Hour incremented")
+        hoursLabel.text = String(gameManager.hour)  //changes age text
+        
+        scene?.dayNightManager(hour: gameManager.hour)
+    
+        incubateUnlessBorn()
+    }
+    
+    func dailyTasks(){
+        increaseBoredomDaysUntilSadness()
+        hungerManager()
+        chooseHungerStatement()
         doAPooADay()
         tooMuchPoo()
-        
-        makeAHappyDay()
+        happyDayStreakIncrementor()
         angelAppearanceManager()
-        
         scene?.increasePooAge()
-        
     }
     
     func angelAppearanceManager(){
@@ -213,11 +240,10 @@ class GameViewController: UIViewController {
         }
     }
     
-    func makeAHappyDay(){
-        if countHappiness() >= 10 {
-            gameManager.happyDays += 1 //increments number of days since played with
+    func happyDayStreakIncrementor(){
+        if countHappiness() >= 10 { return gameManager.happyDays += 1
         } else {
-            gameManager.happyDays = 0 // happyDaysAreAStreak -- no losing a single day; if you msis one day, it's back to square ones
+            gameManager.happyDays = 0
         }
     }
     
@@ -227,21 +253,19 @@ class GameViewController: UIViewController {
                 self.fillIceCreamMenu()
                 self.scene?.pooQuery()
                 self.fillIceCreamMenu(fill: false)
-                //                self.poopVisual.isHidden = true
             })
         }
     }
     
     func tooMuchPoo(){
-        if scene!.pooCounter > 0 {
-            editHappy()
+        guard scene!.pooCounter < 1 else {
+            return editHappy()
         }
     }
     
-    func playVersusHappyManager(){
-        gameManager.playDays += 1
-        
-        if gameManager.playDays > 4 {
+    func increaseBoredomDaysUntilSadness(){
+        gameManager.boredomDays += 1
+        if gameManager.boredomDays > 4 {
             editHappy()
         }
     }
@@ -277,45 +301,25 @@ class GameViewController: UIViewController {
         self.resetVisual.isHidden = false
     }
     
-    @objc func updateHour() {
-        updateTempLabel() //updates temperature if changed
-        gameManager.hour += 1 //increments age every hour
-        print("Hour incremented")
-        hoursLabel.text = String(gameManager.hour)  //changes age text
-        
-        scene?.dayNightManager(hour: gameManager.hour)
-        
-        if gameManager.egg.wearingHat == true && gameManager.lion.born == false {
-            if gameManager.egg.temp < 18 {
-                gameManager.egg.temp += 1
-               return updateTempLabel()
-            }
-            gameManager.egg.temp >= 18
-                scene?.crackEgg(innerFunction: {
-                    //                    happiness.text = String("\(countHappiness())")
-                    self.creatureInteractionButtonsHidden(bool: false)
-                    self.hideEggUI(bool: true)
-                })
-        }
-    }
+
     
-    func stomachContentsStatus(statement: String, bool: Bool){
+    func stomachContentsStatus(statement: String? = "", hidden: Bool? = false){
         self.thoughtBubbleText.text = statement
-        self.thoughtBubble.isHidden = bool
-        self.thoughtBubbleText.isHidden = bool
+        self.thoughtBubble.isHidden = hidden!
+        self.thoughtBubbleText.isHidden = hidden!
     }
     
     func chooseHungerStatement(){
         if countStomachContents() == 0 {
-            self.stomachContentsStatus(statement: "pweez feed me :'(", bool: false)
+            self.stomachContentsStatus(statement: "pweez feed me :'(")
         } else if gameManager.lion.happy < 0 {
-            self.stomachContentsStatus(statement: "I'm so sad :'(", bool: false)
-        } else if gameManager.playDays > 4 {
-            self.stomachContentsStatus(statement: "I'm boooooored", bool: false)
+            self.stomachContentsStatus(statement: "I'm so sad :'(")
+        } else if gameManager.boredomDays > 4 {
+            self.stomachContentsStatus(statement: "I'm boooooored")
         } else if scene!.pooCounter > 0 {
-            self.stomachContentsStatus(statement: "It's starting to smell! :^(", bool: false)
+            self.stomachContentsStatus(statement: "It's starting to smell! :^(")
         } else {
-            self.stomachContentsStatus(statement: "", bool: true)
+            self.stomachContentsStatus(hidden: true)
         }
     }
     
@@ -325,12 +329,6 @@ class GameViewController: UIViewController {
     
     func hideAngel() {
         scene?.angel.isHidden = true
-    }
-    
-    func fillIceCreamArray(firstIceCream: String? = "icecreamfour.png", secondIceCream: String? = "icecreamfour.png", thirdIceCream: String? = "icecreamfour.png"){
-        IceCreamOne.image = UIImage(named: firstIceCream!)
-        IceCreamTwo.image = UIImage(named: secondIceCream!)
-        IceCreamThree.image = UIImage(named: thirdIceCream!)
     }
     
     func fillIceCreamMenu(fill: Bool? = true){
@@ -345,7 +343,6 @@ class GameViewController: UIViewController {
         }
     }
 
-    
     func updateTempLabel(){
         tempLabel.text = "\(gameManager.egg.temp)°C"
     }
