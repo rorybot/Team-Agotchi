@@ -282,13 +282,15 @@ class GameViewController: UIViewController {
         
         scene?.dayNightManager(hour: gameManager.hour)
         
-        if gameManager.egg.wearingHat == true && gameManager.lion.born == false { //checks if we're in egg-land, and wearing a hat
-            gameManager.egg.temp += 1 // increements temperature if so
-            if gameManager.egg.temp >= 18 { //hatches egg if that time
-                scene?.crackEgg() // cracks the egg animation
-                happiness.text = String("\(countHappiness())") //prints happiness to screen
-                self.creatureInteractionButtonsHidden(bool: false)
-                self.hideEggUI(bool: true)
+        if gameManager.egg.wearingHat == true && gameManager.lion.born == false {
+            gameManager.egg.temp += 1
+            updateTempLabel()
+            if gameManager.egg.temp >= 18 {
+                scene?.crackEgg(innerFunction: {
+//                    happiness.text = String("\(countHappiness())")
+                    self.creatureInteractionButtonsHidden(bool: false)
+                    self.hideEggUI(bool: true)
+                })
             }
         }
     }
@@ -301,7 +303,7 @@ class GameViewController: UIViewController {
     
     func chooseHungerStatement(){
         if countStomachContents() == 0 {
-            self.stomachContentsStatus(statement: "pweez feed me :'(", bool: false) //prints out what it needs
+            self.stomachContentsStatus(statement: "pweez feed me :'(", bool: false)
         } else if gameManager.lion.happy < 0 {
             self.stomachContentsStatus(statement: "I'm so sad :'(", bool: false)
         } else if gameManager.playDays > 4 {
